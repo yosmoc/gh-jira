@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+JIRA_ID="$1"
+if [ -z "${JIRA_ID}" ]; then
+  echo "JIRA_ID is not set"
+  exit 1
+fi
+
+JIRA_TITLE=$(curl -s -u "${JIRA_USERNAME}:${JIRA_API_TOKEN}" \
+  "https://${JIRA_DOMAIN}/rest/api/2/issue/${JIRA_ID}" | jq -r '.fields.summary')
+JIRA_TITLE_IN_BRANCH_NAME=$(echo "$JIRA_TITLE" | tr ' ' '_')
+BRANCH_NAME="${JIRA_ID}/${JIRA_TITLE_IN_BRANCH_NAME}"
+
+git checkout -b "${BRANCH_NAME}"
+git commit --allow-empty -m "replace me" --no-verify
+gh pr create --title "${JIRA_ID}: ${JIRA_TITLE}" --draft
