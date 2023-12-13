@@ -54,7 +54,7 @@ func createBranch(branchName string) {
 		log.Fatal(err)
 	}
 	if len(output) == 0 {
-		cmd = exec.Command("git", "commit", "--allow-empty", "-m", "Initial commit", "--no-verify")
+		cmd = exec.Command("git", "commit", "--allow-empty", "-m", "[skip ci] REMOVE ME. EMPTY COMMIT", "--no-verify")
 		err = cmd.Run()
 		if err != nil {
 			log.Fatal(err)
