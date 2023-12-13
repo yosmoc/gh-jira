@@ -1,6 +1,6 @@
-module github.com/yosmoc/gh-jira2
+module github.com/yosmoc/gh-jira
 
-go 1.21.5
+go 1.21
 
 require github.com/cli/go-gh/v2 v2.4.0
 
