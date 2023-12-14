@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,14 +12,18 @@ import (
 	"strings"
 )
 
-type JiraResponse struct {
+type JiraIssue struct {
+	Key    string `json:"key"`
 	Fields struct {
 		Summary string `json:"summary"`
+		Status  struct {
+			Name string `json:"name"`
+		} `json:"status"`
 	} `json:"fields"`
 }
 
-func getJiraTitle(jiraID, jiraAPIToken, jiraDomain string) string {
-	url := fmt.Sprintf("https://%s/rest/api/2/issue/%s", jiraDomain, jiraID)
+func getJiraIssues(jiraAPIToken, jiraDomain string) []JiraIssue {
+	url := fmt.Sprintf("https://%s/rest/api/2/search?jql=status='To Do'", jiraDomain)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -36,16 +41,38 @@ func getJiraTitle(jiraID, jiraAPIToken, jiraDomain string) string {
 		log.Fatal(err)
 	}
 
-	var jiraResp JiraResponse
-	err = json.Unmarshal(body, &jiraResp)
+	var jiraIssues []JiraIssue
+	err = json.Unmarshal(body, &jiraIssues)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return jiraResp.Fields.Summary
+	return jiraIssues
 }
 
-func createBranch(branchName string) {
+func selectJiraIssue(issues []JiraIssue) string {
+	var keys []string
+	for _, issue := range issues {
+		keys = append(keys, fmt.Sprintf("%s - %s", issue.Key, issue.Fields.Summary))
+	}
+
+	cmd := exec.Command("fzf", "--height", "50%", "--prompt", "Select a Jira issue: ")
+	cmd.Stdin = strings.NewReader(strings.Join(keys, "\n"))
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		log.Fatalf("Error running fzf: %v\n%s", err, stderr.String())
+	}
+
+	return strings.TrimSpace(stdout.String())
+}
+
+func createBranch(jiraID, jiraTitle string) {
+	branchName := fmt.Sprintf("%s/%s", jiraID, strings.ReplaceAll(jiraTitle, " ", "-"))
 	exec.Command("git", "switch", "-c", branchName).Run()
 
 	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
@@ -62,22 +89,17 @@ func createBranch(branchName string) {
 	}
 }
 
-func createPR(jiraID, jiraTitle string) {
-	cmd := exec.Command("gh", "pr", "create", "--title", fmt.Sprintf("%s: %s", jiraID, jiraTitle), "-w")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
+// func createPR(jiraID, jiraTitle string) {
+// 	cmd := exec.Command("gh", "pr", "create", "--title", fmt.Sprintf("%s: %s", jiraID, jiraTitle), "-w")
+// 	cmd.Stdout = os.Stdout
+// 	cmd.Stderr = os.Stderr
+// 	err := cmd.Run()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("Please provide a Jira ID")
-	}
-	jiraID := os.Args[1]
-
 	jiraAPIToken := os.Getenv("JIRA_API_TOKEN")
 	if jiraAPIToken == "" {
 		log.Fatal("Please provide a Jira API Token")
@@ -88,10 +110,23 @@ func main() {
 		log.Fatal("Please provide a Jira Domain")
 	}
 
-	jiraTitle := getJiraTitle(jiraID, jiraAPIToken, jiraDomain)
-	jiraTitleInBranchName := strings.ReplaceAll(jiraTitle, " ", "_")
-	branchName := fmt.Sprintf("%s/%s", jiraID, jiraTitleInBranchName)
+	jiraIssues := getJiraIssues(jiraAPIToken, jiraDomain)
+	if len(jiraIssues) == 0 {
+		log.Fatal("No Jira issues with 'To Do' status found.")
+	}
 
-	createBranch(branchName)
-	createPR(jiraID, jiraTitle)
+	selectedIssue := selectJiraIssue(jiraIssues)
+	if selectedIssue == "" {
+		log.Fatal("No Jira issue selected. Manual entry is required.")
+	}
+
+	// Extract Jira ID and Title from the selected issue
+	parts := strings.SplitN(selectedIssue, " - ", 2)
+	if len(parts) != 2 {
+		log.Fatal("Error parsing selected Jira issue.")
+	}
+	jiraID, jiraTitle := parts[0], parts[1]
+
+	createBranch(jiraID, jiraTitle)
+	// createPR(jiraID, jiraTitle)
 }
