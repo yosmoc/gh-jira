@@ -89,7 +89,7 @@ func createPR(jiraID, jiraTitle string) {
 		body = "\"\""
 	}
 
-	cmd := exec.Command("gh", "pr", "create", "-d", "-t", title, "-b", body, "-w")
+	cmd := exec.Command("gh", "pr", "create", "-d", "-t", title, "-b", body)
 	fmt.Println(cmd)
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
