@@ -73,10 +73,13 @@ func createPR(jiraID, jiraTitle string) {
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("Please provide a Jira ID")
+	var jiraID string
+
+	if len(os.Args) > 1 {
+		jiraID = os.Args[1]
+	} else {
+		fmt.Scanln(&jiraID)
 	}
-	jiraID := os.Args[1]
 
 	jiraAPIToken := os.Getenv("JIRA_API_TOKEN")
 	if jiraAPIToken == "" {

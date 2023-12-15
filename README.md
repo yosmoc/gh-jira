@@ -18,5 +18,11 @@ This extension uses following environmental variables. Please set these variable
 ## Usage
 
 ```bash
-gh jira jira_id
+gh jira JIRA-123
+```
+
+or
+
+```bash
+echo "JIRA-123" | gh jira
 ```
