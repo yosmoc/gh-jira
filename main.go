@@ -45,14 +45,21 @@ func getJiraTitle(jiraID, jiraAPIToken, jiraDomain string) string {
 	return jiraResp.Fields.Summary
 }
 
-func createBranch(branchName string) {
-	exec.Command("git", "switch", "-c", branchName).Run()
+func createOrSwitchBranch(branchName string) {
+	cmd := exec.Command("git", "rev-parse", "--verify", branchName)
+	_, err := cmd.Output()
+	if err != nil {
+		exec.Command("git", "switch", branchName).Run()
+	} else {
+		exec.Command("git", "switch", "-c", branchName).Run()
+	}
 
-	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
+	cmd = exec.Command("git", "rev-parse", "--verify", "HEAD")
 	output, err := cmd.Output()
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	if len(output) == 0 {
 		cmd = exec.Command("git", "commit", "--allow-empty", "-m", "[skip ci] REMOVE ME. EMPTY COMMIT", "--no-verify")
 		err = cmd.Run()
@@ -95,6 +102,6 @@ func main() {
 	jiraTitleInBranchName := strings.ReplaceAll(jiraTitle, " ", "_")
 	branchName := fmt.Sprintf("%s/%s", jiraID, jiraTitleInBranchName)
 
-	createBranch(branchName)
+	createOrSwitchBranch(branchName)
 	createPR(jiraID, jiraTitle)
 }
