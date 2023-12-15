@@ -78,15 +78,14 @@ func createEmptyCommit() {
 
 func createPR(jiraID, jiraTitle string) {
 	title := fmt.Sprintf("\"%s: %s\"", jiraID, jiraTitle)
+	prCreateCmd := exec.Command("gh", "pr", "create", "-d", "-t", title)
 
-	var body string
-	// TODO: currently doesn't support multiple templates
+	// TODO: currently support only default template file
 	templatePath := filepath.Join(".github", "pull_request_template.md")
-	templateContent, err := os.ReadFile(templatePath)
-	if err == nil {
-		body = "\"" + string(templateContent) + "\""
+	if _, err := os.Stat(templatePath); err == nil {
+		prCreateCmd.Args = append(prCreateCmd.Args, "-F", templatePath)
 	} else {
-		body = "\"\""
+		prCreateCmd.Args = append(prCreateCmd.Args, "-b", "\"\"")
 	}
 
 	// workaround for determine the default push target branch
@@ -94,9 +93,7 @@ func createPR(jiraID, jiraTitle string) {
 		log.Fatal(err)
 	}
 
-	cmd := exec.Command("gh", "pr", "create", "-d", "-t", title, "-b", body)
-	fmt.Println(cmd)
-	if err := cmd.Run(); err != nil {
+	if err := prCreateCmd.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
