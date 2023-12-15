@@ -62,15 +62,13 @@ func createOrSwitchBranch(branchName string) {
 }
 
 func createEmptyCommit() {
-	output, err := exec.Command("git", "rev-parse", "--verify", "HEAD").Output()
+	output, err := exec.Command("git", "log", "--oneline", "origin/main..HEAD").Output()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if len(output) == 0 {
-		cmd := exec.Command("git", "commit", "--allow-empty", "-m", "[skip ci] REMOVE ME. EMPTY COMMIT", "--no-verify")
-		err = cmd.Run()
-		if err != nil {
+		if err := exec.Command("git", "commit", "--allow-empty", "-m", "[skip ci] REMOVE ME. EMPTY COMMIT", "--no-verify").Run(); err != nil {
 			log.Fatal(err)
 		}
 	}
