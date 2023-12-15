@@ -89,6 +89,11 @@ func createPR(jiraID, jiraTitle string) {
 		body = "\"\""
 	}
 
+	// workaround for determine the default push target branch
+	if err := exec.Command("git", "push", "-u", "origin", "HEAD").Run(); err != nil {
+		log.Fatal(err)
+	}
+
 	cmd := exec.Command("gh", "pr", "create", "-d", "-t", title, "-b", body)
 	fmt.Println(cmd)
 	if err := cmd.Run(); err != nil {
