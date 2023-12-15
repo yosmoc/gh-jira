@@ -77,16 +77,16 @@ func createEmptyCommit() {
 }
 
 func createPR(jiraID, jiraTitle string) {
-	title := fmt.Sprintf("%s: %s", jiraID, jiraTitle)
+	title := fmt.Sprintf("\"%s: %s\"", jiraID, jiraTitle)
 
 	var body string
 	// TODO: currently doesn't support multiple templates
 	templatePath := filepath.Join(".github", "pull_request_template.md")
 	templateContent, err := os.ReadFile(templatePath)
 	if err == nil {
-		body = string(templateContent)
+		body = "\"" + string(templateContent) + "\""
 	} else {
-		body = ""
+		body = "\"\""
 	}
 
 	cmd := exec.Command("gh", "pr", "create", "-d", "-t", title, "-b", body, "-w")
