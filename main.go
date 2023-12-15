@@ -46,6 +46,18 @@ func getJiraTitle(jiraID, jiraAPIToken, jiraDomain string) string {
 	return jiraResp.Fields.Summary
 }
 
+func convertJiraTitleToBranchName(jiraTitle string) string {
+	specialChars := []string{
+		"~", "^", ":", "*", "?", "[", "\\", "@", "!", "#", "$", "%", "&", "'", "(", ")", "+", ",", "/", ";", "<", "=", ">", "`", "{", "|", "}", "\"", ".",
+	}
+
+	for _, char := range specialChars {
+		jiraTitle = strings.ReplaceAll(jiraTitle, char, "")
+	}
+
+	return strings.ReplaceAll(jiraTitle, " ", "_")
+}
+
 func createOrSwitchBranch(branchName string) {
 	if err := exec.Command("git", "rev-parse", "--verify", branchName).Run(); err != nil {
 		err = exec.Command("git", "switch", "-c", branchName).Run()
@@ -115,7 +127,7 @@ func main() {
 	}
 
 	jiraTitle := getJiraTitle(jiraID, jiraAPIToken, jiraDomain)
-	jiraTitleInBranchName := strings.ReplaceAll(jiraTitle, " ", "_")
+	jiraTitleInBranchName := convertJiraTitleToBranchName(jiraTitle)
 	branchName := fmt.Sprintf("%s/%s", jiraID, jiraTitleInBranchName)
 
 	createOrSwitchBranch(branchName)
