@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -83,7 +82,7 @@ func createPR(jiraID, jiraTitle string) {
 	var body string
 	// TODO: currently doesn't support multiple templates
 	templatePath := filepath.Join(".github", "pull_request_template.md")
-	templateContent, err := ioutil.ReadFile(templatePath)
+	templateContent, err := os.ReadFile(templatePath)
 	if err == nil {
 		body = string(templateContent)
 	} else {
