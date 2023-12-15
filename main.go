@@ -91,9 +91,8 @@ func createPR(jiraID, jiraTitle string) {
 		log.Fatal(err)
 	}
 
-	if err := prCreateCmd.Run(); err != nil {
-		log.Fatal(err)
-	}
+	output, _ := prCreateCmd.CombinedOutput()
+	fmt.Println(string(output))
 }
 
 func main() {
