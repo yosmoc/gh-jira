@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+EMPTY_COMMIT_MESSAGE = "[skip ci] REMOVE ME. EMPTY COMMIT"
+
 type JiraResponse struct {
 	Fields struct {
 		Summary string `json:"summary"`
@@ -80,7 +82,7 @@ func createEmptyCommit() {
 	}
 
 	if len(output) == 0 {
-		if err := exec.Command("git", "commit", "--allow-empty", "-m", "[skip ci] REMOVE ME. EMPTY COMMIT", "--no-verify").Run(); err != nil {
+		if err := exec.Command("git", "commit", "--allow-empty", "-m", EMPTY_COMMIT_MESSAGE, "--no-verify").Run(); err != nil {
 			log.Fatal(err)
 		}
 	}
