@@ -46,22 +46,28 @@ func getJiraTitle(jiraID, jiraAPIToken, jiraDomain string) string {
 }
 
 func createOrSwitchBranch(branchName string) {
-	cmd := exec.Command("git", "rev-parse", "--verify", branchName)
-	_, err := cmd.Output()
-	if err != nil {
-		exec.Command("git", "switch", branchName).Run()
-	} else {
-		exec.Command("git", "switch", "-c", branchName).Run()
+	if err := exec.Command("git", "rev-parse", "--verify", branchName).Run(); err != nil {
+		err = exec.Command("git", "switch", "-c", branchName).Run()
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		return
 	}
 
-	cmd = exec.Command("git", "rev-parse", "--verify", "HEAD")
-	output, err := cmd.Output()
+	if err := exec.Command("git", "switch", branchName).Run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func createEmptyCommit() {
+	output, err := exec.Command("git", "rev-parse", "--verify", "HEAD").Output()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if len(output) == 0 {
-		cmd = exec.Command("git", "commit", "--allow-empty", "-m", "[skip ci] REMOVE ME. EMPTY COMMIT", "--no-verify")
+		cmd := exec.Command("git", "commit", "--allow-empty", "-m", "[skip ci] REMOVE ME. EMPTY COMMIT", "--no-verify")
 		err = cmd.Run()
 		if err != nil {
 			log.Fatal(err)
@@ -70,11 +76,11 @@ func createOrSwitchBranch(branchName string) {
 }
 
 func createPR(jiraID, jiraTitle string) {
-	cmd := exec.Command("gh", "pr", "create", "--title", fmt.Sprintf("%s: %s", jiraID, jiraTitle), "-w")
+	cmd := exec.Command("gh", "pr", "create", "-d", "-t", fmt.Sprintf("\"%s: %s\"", jiraID, jiraTitle))
+	fmt.Println(cmd)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -103,5 +109,6 @@ func main() {
 	branchName := fmt.Sprintf("%s/%s", jiraID, jiraTitleInBranchName)
 
 	createOrSwitchBranch(branchName)
+	createEmptyCommit()
 	createPR(jiraID, jiraTitle)
 }
