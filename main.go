@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-EMPTY_COMMIT_MESSAGE = "[skip ci] REMOVE ME. EMPTY COMMIT"
+var EMPTY_COMMIT_MESSAGE = "[skip ci] REMOVE ME. EMPTY COMMIT"
 
 type JiraResponse struct {
 	Fields struct {
