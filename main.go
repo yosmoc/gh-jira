@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -76,10 +78,20 @@ func createEmptyCommit() {
 }
 
 func createPR(jiraID, jiraTitle string) {
-	cmd := exec.Command("gh", "pr", "create", "-d", "-t", fmt.Sprintf("\"%s: %s\"", jiraID, jiraTitle))
+	title := fmt.Sprintf("%s: %s", jiraID, jiraTitle)
+
+	var body string
+	// TODO: currently doesn't support multiple templates
+	templatePath := filepath.Join(".github", "pull_request_template.md")
+	templateContent, err := ioutil.ReadFile(templatePath)
+	if err == nil {
+		body = string(templateContent)
+	} else {
+		body = ""
+	}
+
+	cmd := exec.Command("gh", "pr", "create", "-d", "-t", title, "-b", body, "-w")
 	fmt.Println(cmd)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
