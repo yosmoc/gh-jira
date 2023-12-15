@@ -75,7 +75,7 @@ func createEmptyCommit() {
 }
 
 func createPR(jiraID, jiraTitle string) {
-	title := fmt.Sprintf("\"%s: %s\"", jiraID, jiraTitle)
+	title := fmt.Sprintf("%s: %s", jiraID, jiraTitle)
 	prCreateCmd := exec.Command("gh", "pr", "create", "-d", "-t", title)
 
 	// TODO: currently support only default template file
@@ -83,7 +83,7 @@ func createPR(jiraID, jiraTitle string) {
 	if _, err := os.Stat(templatePath); err == nil {
 		prCreateCmd.Args = append(prCreateCmd.Args, "-F", templatePath)
 	} else {
-		prCreateCmd.Args = append(prCreateCmd.Args, "-b", "\"\"")
+		prCreateCmd.Args = append(prCreateCmd.Args, "-b", "")
 	}
 
 	// workaround for determine the default push target branch
