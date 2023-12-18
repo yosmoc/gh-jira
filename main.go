@@ -122,6 +122,9 @@ func main() {
 			jiraID = strings.TrimSuffix(string(stdin), "\n")
 		}
 	}
+	if jiraID == "" {
+		log.Fatal("Please provide a Jira ID")
+	}
 
 	jiraAPIToken := os.Getenv("JIRA_API_TOKEN")
 	if jiraAPIToken == "" {
