@@ -57,7 +57,7 @@ func convertJiraTitleToBranchName(jiraTitle string) string {
 		jiraTitle = strings.ReplaceAll(jiraTitle, char, "")
 	}
 
-	return strings.ReplaceAll(jiraTitle, " ", "_")
+	return strings.ToLower(strings.ReplaceAll(jiraTitle, " ", "_"))
 }
 
 func createOrSwitchBranch(branchName string) {
