@@ -117,7 +117,10 @@ func main() {
 	if len(os.Args) > 1 {
 		jiraID = os.Args[1]
 	} else {
-		fmt.Scanln(&jiraID)
+		if !(terminal.IsTerminal(int(os.Stdin.Fd()))) {
+			stdin, _ := io.ReadAll(os.Stdin)
+			jiraID = string(stdin)
+		}
 	}
 
 	jiraAPIToken := os.Getenv("JIRA_API_TOKEN")
