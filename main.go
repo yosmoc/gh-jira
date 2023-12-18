@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var EMPTY_COMMIT_MESSAGE = "[skip ci] REMOVE ME. EMPTY COMMIT"
