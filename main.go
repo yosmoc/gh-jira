@@ -116,6 +116,10 @@ func createBranch(issueID, issueTitle string) {
 		}
 	}
 
+	createCommit(issueID, issueTitle, branchName)
+}
+
+func createCommit(issueID, issueTitle, branchName string) {
 	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
 	output, err := cmd.Output()
 	if err != nil {
