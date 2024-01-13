@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -93,22 +94,40 @@ func selectJiraIssue(issues []JiraIssue, iFilter string) (string, string) {
 	// fmt.Printf("Jira issue title: %s\n", strings.Join(strings.SplitN(string(output), " ", 10)[2:], "-"))
 }
 
-func createBranch(jiraID, jiraTitle string) {
-	// branchName := fmt.Sprintf("%s/%s", jiraID, strings.ReplaceAll(jiraTitle, " ", "-"))
-	// exec.Command("git", "switch", "-c", branchName).Run()
+func createBranch(issueID, issueTitle string) {
+	sanitizedIssueTitle := strings.ReplaceAll(issueTitle, " ", "-")
+	reg, err := regexp.Compile("[^a-zA-Z0-9-]+")
+	if err != nil {
+		log.Fatal(err)
+	}
+	sanitizedIssueTitle = reg.ReplaceAllString(sanitizedIssueTitle, "")
+	sanitizedIssueTitle = strings.ToLower(sanitizedIssueTitle)
 
-	// cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
-	// output, err := cmd.Output()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// if len(output) == 0 {
-	// 	cmd = exec.Command("git", "commit", "--allow-empty", "-m", EMPTY_COMMIT_MESSAGE, "--no-verify")
-	// 	err = cmd.Run()
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// }
+	branchName := fmt.Sprintf("%s/%s", issueID, sanitizedIssueTitle)
+
+	if err := exec.Command("git", "rev-parse", "--verify", branchName).Run(); err != nil {
+		err = exec.Command("git", "switch", "-c", branchName).Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		if err := exec.Command("git", "switch", branchName).Run(); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
+	output, err := cmd.Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(output) == 0 {
+		cmd = exec.Command("git", "commit", "--allow-empty", "-m", EMPTY_COMMIT_MESSAGE, "--no-verify")
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 // func createPR(jiraID, jiraTitle string) {
@@ -148,6 +167,7 @@ func main() {
 
 	fmt.Printf("Selected issue: %s - %s", issueID, issueSummary)
 
+	createBranch(issueID, issueSummary)
 	// // Extract Jira ID and Title from the selected issue
 	// parts := strings.SplitN(selectedIssue, " - ", 2)
 	// if len(parts) != 2 {
@@ -155,6 +175,5 @@ func main() {
 	// }
 	// jiraID, jiraTitle := parts[0], parts[1]
 
-	// createBranch(jiraID, jiraTitle)
 	// createPR(jiraID, jiraTitle)
 }
