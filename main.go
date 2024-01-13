@@ -87,11 +87,6 @@ func selectJiraIssue(issues []JiraIssue, iFilter string) (string, string) {
 	selectedIssue := keys[selectedKey]
 
 	return selectedIssue.IssueID, selectedIssue.Fields.Summary
-
-	// Debug
-	// fmt.Printf("Selected issue: %s\n", string(output))
-	// fmt.Printf("Jira issue id: %s\n", strings.SplitN(string(output), " ", 2)[0])
-	// fmt.Printf("Jira issue title: %s\n", strings.Join(strings.SplitN(string(output), " ", 10)[2:], "-"))
 }
 
 func createBranch(issueID, issueTitle string) {
@@ -178,15 +173,5 @@ func main() {
 		log.Fatal("No Jira issue selected. Manual entry is required.")
 	}
 
-	fmt.Printf("Selected issue: %s - %s", issueID, issueSummary)
-
 	createBranch(issueID, issueSummary)
-	// // Extract Jira ID and Title from the selected issue
-	// parts := strings.SplitN(selectedIssue, " - ", 2)
-	// if len(parts) != 2 {
-	// 	log.Fatal("Error parsing selected Jira issue.")
-	// }
-	// jiraID, jiraTitle := parts[0], parts[1]
-
-	// createPR(jiraID, jiraTitle)
 }
