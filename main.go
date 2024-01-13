@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -138,10 +139,24 @@ func createPR(issueID, issueTitle, branchName string) {
 		log.Fatal(err)
 	}
 	if len(output) == 0 {
-		cmd = exec.Command("gh", "pr", "create", "--draft", "--title", fmt.Sprintf("%s: %s", issueID, issueTitle))
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
+		templatePath := filepath.Join(".github", "gh-jira_template.md")
+		title := fmt.Sprintf("%s: %s", issueID, issueTitle)
+		createPrCmd := exec.Command("gh", "pr", "create", "-d", "-t", title)
+		body := ""
+		if _, err := os.Stat(templatePath); err == nil {
+			template, err := os.ReadFile(templatePath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			body = strings.Replace(string(template), "{{ISSUE_ID}}", issueID, -1)
+			createPrCmd.Args = append(createPrCmd.Args, "-b", body)
+		} else {
+			createPrCmd.Args = append(createPrCmd.Args, "-b", "")
+		}
+
+		createPrCmd.Stdout = os.Stdout
+		createPrCmd.Stderr = os.Stderr
+		err = createPrCmd.Run()
 		if err != nil {
 			log.Fatal(err)
 		}
