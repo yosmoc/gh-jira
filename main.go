@@ -131,18 +131,27 @@ func createCommit(issueID, issueTitle, branchName string) {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		createPR(issueID, issueTitle, branchName)
 	}
 }
 
-// func createPR(jiraID, jiraTitle string) {
-// 	cmd := exec.Command("gh", "pr", "create", "--title", fmt.Sprintf("%s: %s", jiraID, jiraTitle), "-w")
-// 	cmd.Stdout = os.Stdout
-// 	cmd.Stderr = os.Stderr
-// 	err := cmd.Run()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
+func createPR(issueID, issueTitle, branchName string) {
+	cmd := exec.Command("gh", "pr", "list", "--base", branchName)
+	output, err := cmd.Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(output) == 0 {
+		cmd = exec.Command("gh", "pr", "create", "--draft", "--title", fmt.Sprintf("%s: %s", issueID, issueTitle))
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
 
 func main() {
 	jiraAPIToken := os.Getenv("JIRA_API_TOKEN")
